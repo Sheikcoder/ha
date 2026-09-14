@@ -76,8 +76,8 @@ export default function HALogo3DMesh({
   depth = 0.25,
   bevelThickness = 0.03,
   bevelSize = 0.03,
-  color = '#8A1E03',
-  emissive = '#4d0c00',
+  color = '#6e0f1f',
+  emissive = '#3d0812',
   roughness = 0.35,
   metalness = 0.35,
   animated = true,
@@ -113,7 +113,7 @@ export default function HALogo3DMesh({
           <meshStandardMaterial
             color={color}
             emissive={emissive}
-            emissiveIntensity={0.25}
+            emissiveIntensity={0.35}
             roughness={roughness}
             metalness={metalness}
             envMapIntensity={1.2}
@@ -121,8 +121,8 @@ export default function HALogo3DMesh({
         </mesh>
       ))}
 
-      {/* Internal warm orange rim point light */}
-      <pointLight color="#B83A00" intensity={2} distance={6} decay={2} position={[0, 0, depth]} />
+      {/* Soft burgundy rim light from inside the mark */}
+      <pointLight color="#8e1b31" intensity={4} distance={6} decay={2} position={[0, 0, depth + 0.4]} />
     </group>
   )
 }

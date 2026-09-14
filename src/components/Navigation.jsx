@@ -1,41 +1,57 @@
 import { useState, useEffect } from 'react'
+import { NAV, BRAND } from '../content/site'
+import { hrefFor } from '../router'
+import HAMark from './HAMark'
+import ThemeSwitch from './ThemeSwitch'
 
-export default function Navigation() {
+export default function Navigation({ page }) {
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
 
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 50)
-    }
+    const handleScroll = () => setScrolled(window.scrollY > 40)
+    handleScroll()
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  const scrollTo = (id) => {
-    setMenuOpen(false)
-    const el = document.getElementById(id)
-    if (el) el.scrollIntoView({ behavior: 'smooth' })
-  }
+  // Close the mobile menu whenever the route changes
+  useEffect(() => { setMenuOpen(false) }, [page])
+
+  useEffect(() => {
+    document.body.style.overflow = menuOpen ? 'hidden' : ''
+    return () => { document.body.style.overflow = '' }
+  }, [menuOpen])
 
   return (
     <>
-      <nav className={`nav ${scrolled ? 'scrolled' : ''}`} role="navigation" aria-label="Main navigation">
-        {/* Left Brand Area: Official HA Logo ONLY */}
-        <a 
-          href="#hero" 
-          onClick={(e) => { e.preventDefault(); scrollTo('hero') }} 
-          className="nav-brand"
-          aria-label="Hanif Abdullah - Go to top"
-        >
-          <img src="/ha-logo.png" alt="HA Official Logo" className="nav-logo" />
+      <nav className={`nav ${scrolled || page !== 'home' ? 'scrolled' : ''}`} role="navigation" aria-label="Main navigation">
+        <a href={hrefFor('home')} className="nav-brand" aria-label={`${BRAND.name} — home`}>
+          <HAMark className="nav-logo" />
+          <span className="nav-brand-text">
+            <span className="nav-brand-name">{BRAND.name}</span>
+            <span className="nav-brand-phrase">{BRAND.phrase}</span>
+          </span>
         </a>
 
         <ul className="nav-links">
-          <li><a href="#journey" onClick={(e) => { e.preventDefault(); scrollTo('journey') }}>Journey</a></li>
-          <li><a href="#training" onClick={(e) => { e.preventDefault(); scrollTo('training') }}>Training</a></li>
-          <li><a href="#vision" onClick={(e) => { e.preventDefault(); scrollTo('vision') }}>Vision</a></li>
+          {NAV.map(item => (
+            <li key={item.id}>
+              <a
+                href={hrefFor(item.id)}
+                className={page === item.id ? 'active' : ''}
+                aria-current={page === item.id ? 'page' : undefined}
+              >
+                {item.label}
+              </a>
+            </li>
+          ))}
         </ul>
+
+        <div className="nav-right">
+          <ThemeSwitch />
+          <a href={hrefFor('contact', 'sponsorship')} className="nav-cta">Partner with Hanif</a>
+        </div>
 
         <button
           className={`nav-hamburger ${menuOpen ? 'open' : ''}`}
@@ -50,9 +66,21 @@ export default function Navigation() {
       </nav>
 
       <div className={`mobile-menu ${menuOpen ? 'open' : ''}`} role="dialog" aria-label="Mobile menu">
-        <a href="#journey" onClick={(e) => { e.preventDefault(); scrollTo('journey') }}>JOURNEY</a>
-        <a href="#training" onClick={(e) => { e.preventDefault(); scrollTo('training') }}>TRAINING</a>
-        <a href="#vision" onClick={(e) => { e.preventDefault(); scrollTo('vision') }}>VISION</a>
+        {NAV.map((item, i) => (
+          <a
+            key={item.id}
+            href={hrefFor(item.id)}
+            className={page === item.id ? 'active' : ''}
+            style={{ transitionDelay: `${0.05 * i}s` }}
+            onClick={() => setMenuOpen(false)}
+          >
+            {item.label}
+          </a>
+        ))}
+        <div className="mobile-menu-footer">
+          <ThemeSwitch />
+          <span>{BRAND.tagline}</span>
+        </div>
       </div>
     </>
   )

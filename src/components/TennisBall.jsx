@@ -1,90 +1,102 @@
-import { useRef, useMemo } from 'react'
-import { useFrame } from '@react-three/fiber'
+import { useMemo, forwardRef } from 'react'
 import * as THREE from 'three'
 
-export default function TennisBall({ position = [0, 0, 0], scale = 1, animated = true }) {
-  const groupRef = useRef()
-  const glowRef = useRef()
-  const trailRef = useRef()
+/* ------------------------------------------------------------
+   Realistic tennis ball
+   - felt-like core (high roughness, subtle emissive lift)
+   - real seam curve (two-lobe tennis seam) as a tube
+   - soft "fuzz" halo using a fresnel shader on a slightly larger shell
+   ------------------------------------------------------------ */
 
-  // Trail points
-  const trailPositions = useMemo(() => {
-    const pos = new Float32Array(30 * 3)
-    return pos
-  }, [])
+export const BALL_COLOR = '#d6de3c'
+export const SEAM_COLOR = '#f4f4ee'
 
-  useFrame((state) => {
-    const t = state.clock.elapsedTime
-    if (!groupRef.current || !animated) return
+/* Tennis seam curve on a unit sphere */
+function seamPoints(segments = 220, radius = 1) {
+  const pts = []
+  const a = 0.8, b = 0.2, c = 0.75
+  for (let i = 0; i <= segments; i++) {
+    const t = (i / segments) * Math.PI * 2
+    const v = new THREE.Vector3(
+      a * Math.cos(t) + b * Math.cos(3 * t),
+      a * Math.sin(t) - b * Math.sin(3 * t),
+      c * Math.sin(2 * t)
+    ).normalize().multiplyScalar(radius)
+    pts.push(v)
+  }
+  return pts
+}
 
-    groupRef.current.rotation.x = t * 1.2
-    groupRef.current.rotation.z = t * 0.8
+const fuzzVertex = /* glsl */`
+  varying vec3 vNormal;
+  varying vec3 vViewDir;
+  void main() {
+    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+    vNormal = normalize(normalMatrix * normal);
+    vViewDir = normalize(-mvPosition.xyz);
+    gl_Position = projectionMatrix * mvPosition;
+  }
+`
 
-    // Subtle floating
-    groupRef.current.position.y = position[1] + Math.sin(t * 1.5) * 0.1
+const fuzzFragment = /* glsl */`
+  uniform vec3 uColor;
+  uniform float uStrength;
+  varying vec3 vNormal;
+  varying vec3 vViewDir;
+  void main() {
+    float fresnel = 1.0 - max(dot(normalize(vNormal), normalize(vViewDir)), 0.0);
+    float alpha = pow(fresnel, 3.0) * uStrength;
+    gl_FragColor = vec4(uColor, alpha);
+  }
+`
 
-    if (glowRef.current) {
-      glowRef.current.material.opacity = 0.12 + Math.sin(t * 3) * 0.05
-    }
-  })
+const TennisBall = forwardRef(function TennisBall(
+  { radius = 0.11, fuzz = 0.55, castShadow = true, ...props },
+  ref
+) {
+  const seamGeometry = useMemo(() => {
+    const curve = new THREE.CatmullRomCurve3(seamPoints(220, radius * 1.004), true)
+    return new THREE.TubeGeometry(curve, 260, radius * 0.055, 8, true)
+  }, [radius])
+
+  const fuzzUniforms = useMemo(() => ({
+    uColor: { value: new THREE.Color('#eef58a') },
+    uStrength: { value: fuzz }
+  }), [fuzz])
 
   return (
-    <group position={position} scale={scale}>
-      <group ref={groupRef}>
-        {/* Main tennis ball */}
-        <mesh castShadow>
-          <sphereGeometry args={[0.3, 32, 32]} />
-          <meshStandardMaterial
-            color="#c8cc3c"
-            roughness={0.85}
-            metalness={0.05}
-            emissive="#3a3c00"
-            emissiveIntensity={0.1}
-          />
-        </mesh>
-
-        {/* Seam line 1 */}
-        <mesh rotation={[Math.PI / 4, 0, Math.PI / 6]}>
-          <torusGeometry args={[0.305, 0.006, 8, 64]} />
-          <meshStandardMaterial 
-            color="#e8e8e0" 
-            roughness={0.6} 
-            transparent 
-            opacity={0.5} 
-          />
-        </mesh>
-
-        {/* Seam line 2 */}
-        <mesh rotation={[-Math.PI / 4, Math.PI / 3, -Math.PI / 6]}>
-          <torusGeometry args={[0.305, 0.006, 8, 64]} />
-          <meshStandardMaterial 
-            color="#e8e8e0" 
-            roughness={0.6} 
-            transparent 
-            opacity={0.5} 
-          />
-        </mesh>
-      </group>
-
-      {/* Orange glow */}
-      <mesh ref={glowRef}>
-        <sphereGeometry args={[0.5, 16, 16]} />
-        <meshBasicMaterial
-          color="#B83A00"
-          transparent
-          opacity={0.12}
-          side={THREE.BackSide}
-          depthWrite={false}
+    <group ref={ref} {...props}>
+      {/* Felt core */}
+      <mesh castShadow={castShadow}>
+        <sphereGeometry args={[radius, 48, 48]} />
+        <meshStandardMaterial
+          color={BALL_COLOR}
+          roughness={0.96}
+          metalness={0}
+          emissive="#5a5f12"
+          emissiveIntensity={0.18}
         />
       </mesh>
 
-      {/* Point light from ball */}
-      <pointLight
-        color="#B83A00"
-        intensity={0.5}
-        distance={3}
-        decay={2}
-      />
+      {/* Seam */}
+      <mesh geometry={seamGeometry} castShadow={false}>
+        <meshStandardMaterial color={SEAM_COLOR} roughness={0.7} metalness={0} />
+      </mesh>
+
+      {/* Fuzz halo */}
+      <mesh scale={1.07}>
+        <sphereGeometry args={[radius, 32, 32]} />
+        <shaderMaterial
+          vertexShader={fuzzVertex}
+          fragmentShader={fuzzFragment}
+          uniforms={fuzzUniforms}
+          transparent
+          depthWrite={false}
+          side={THREE.FrontSide}
+        />
+      </mesh>
     </group>
   )
-}
+})
+
+export default TennisBall
