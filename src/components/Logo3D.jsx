@@ -1,6 +1,7 @@
 import { useRef, useEffect } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
+import { OrbitControls } from '@react-three/drei'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 import HALogo3DMesh from './HALogoGeometry'
 import { useTheme } from '../theme'
@@ -26,13 +27,11 @@ function LogoEnvironment() {
 function InteractiveLogo({ dark }) {
   const containerRef = useRef()
 
-  useFrame((state) => {
+  useFrame(() => {
     if (containerRef.current) {
+      // slow turn with the page scroll; dragging is handled by OrbitControls
       const scrollTurn = (window.scrollY || 0) * 0.0012
-      const mouseX = state.pointer.x * 0.45 + scrollTurn
-      const mouseY = state.pointer.y * 0.3
-      containerRef.current.rotation.y = THREE.MathUtils.lerp(containerRef.current.rotation.y, mouseX, 0.05)
-      containerRef.current.rotation.x = THREE.MathUtils.lerp(containerRef.current.rotation.x, -mouseY, 0.05)
+      containerRef.current.rotation.y = THREE.MathUtils.lerp(containerRef.current.rotation.y, scrollTurn, 0.05)
     }
   })
 
@@ -64,7 +63,7 @@ export default function Logo3D({ height = '420px', transparent = true }) {
   const hostRef = useRef(null)
   const frameloop = useVisibleFrameloop(hostRef)
   return (
-    <div className="logo3d" style={{ width: '100%', height, position: 'relative' }} ref={hostRef}>
+    <div className="logo3d" style={{ width: '100%', height, position: 'relative' }} ref={hostRef} data-cursor="drag">
       <Canvas
         key={theme}
         dpr={lowPower ? 1 : [1, 1.5]}
@@ -80,7 +79,9 @@ export default function Logo3D({ height = '420px', transparent = true }) {
         <directionalLight position={[-5, -2, 3]} intensity={0.8} color="#c9cbd1" />
         <pointLight position={[-3, 2, 3]} color="#8e1b31" intensity={dark ? 30 : 12} distance={14} />
         <InteractiveLogo dark={dark} />
+        <OrbitControls enableZoom={false} enablePan={false} autoRotate autoRotateSpeed={0.7} rotateSpeed={0.6} minPolarAngle={Math.PI / 3} maxPolarAngle={Math.PI / 1.6} />
       </Canvas>
+      <span className="logo3d-hint" aria-hidden="true">Drag to rotate</span>
     </div>
   )
 }

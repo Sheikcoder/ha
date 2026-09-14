@@ -6,6 +6,9 @@ import Footer from './components/Footer'
 import { useRoute } from './router'
 import { ThemeProvider } from './theme'
 import { audio } from './audio'
+import { smoothScroll } from './smoothScroll'
+import Cursor from './components/Cursor'
+import BackToTop from './components/BackToTop'
 import Home from './pages/Home'
 
 // Inner pages are code-split so the home page loads as fast as possible
@@ -15,8 +18,9 @@ const Gallery = lazy(() => import('./pages/Gallery'))
 const Results = lazy(() => import('./pages/Results'))
 const Partners = lazy(() => import('./pages/Partners'))
 const Contact = lazy(() => import('./pages/Contact'))
+const NotFound = lazy(() => import('./pages/NotFound'))
 
-const PAGES = { home: Home, about: About, journey: Journey, gallery: Gallery, results: Results, partners: Partners, contact: Contact }
+const PAGES = { home: Home, about: About, journey: Journey, gallery: Gallery, results: Results, partners: Partners, contact: Contact, notfound: NotFound }
 
 function PageFallback() {
   return <div className="page-fallback" aria-hidden="true" />
@@ -30,6 +34,7 @@ function AppShell() {
   useEffect(() => {
     if (loaded) {
       const timer = setTimeout(() => setShowContent(true), 150)
+      smoothScroll.init()
       return () => clearTimeout(timer)
     }
   }, [loaded])
@@ -42,7 +47,8 @@ function AppShell() {
       gallery: 'Gallery — Hanif Abdullah',
       results: 'Results — Hanif Abdullah',
       partners: 'Partners — Hanif Abdullah',
-      contact: 'Contact — Hanif Abdullah'
+      contact: 'Contact — Hanif Abdullah',
+      notfound: 'Page not found — Hanif Abdullah'
     }
     document.title = titles[page] || titles.home
   }, [page])
@@ -67,16 +73,19 @@ function AppShell() {
           animate={{ opacity: showContent ? 1 : 0 }}
           transition={{ duration: 0.8 }}
         >
+          <a href="#main" className="skip-link">Skip to content</a>
+          <Cursor />
           <Navigation page={page} />
 
           <AnimatePresence mode="wait">
             <motion.main
               key={page}
+              id="main"
               className={`page page--${page}`}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.5, ease: 'easeOut' }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.45, ease: 'easeOut' }}
             >
               {/* burgundy wipe that reveals the new page */}
               <motion.div
@@ -94,6 +103,7 @@ function AppShell() {
           </AnimatePresence>
 
           <Footer />
+          <BackToTop />
         </motion.div>
       )}
     </>

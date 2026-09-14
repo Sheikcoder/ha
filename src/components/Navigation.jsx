@@ -4,6 +4,7 @@ import { hrefFor } from '../router'
 import HAMark from './HAMark'
 import ThemeSwitch from './ThemeSwitch'
 import SoundToggle from './SoundToggle'
+import Magnetic from './Magnetic'
 import { motion, useScroll, useSpring } from 'framer-motion'
 
 export default function Navigation({ page }) {
@@ -55,7 +56,7 @@ export default function Navigation({ page }) {
         <div className="nav-right">
           <SoundToggle label={false} />
           <ThemeSwitch />
-          <a href={hrefFor('contact', 'sponsorship')} className="nav-cta">Partner with Hanif</a>
+          <Magnetic strength={0.2}><a href={hrefFor('contact', 'sponsorship')} className="nav-cta">Partner with Hanif</a></Magnetic>
         </div>
 
         <button

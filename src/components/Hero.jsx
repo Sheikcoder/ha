@@ -7,6 +7,7 @@ import HAMark from './HAMark'
 import { useTheme } from '../theme'
 import { useSound, audio } from '../audio'
 import { useVisibleFrameloop } from '../perf'
+import Magnetic from './Magnetic'
 
 const TennisScene = lazy(() => import('./TennisScene'))
 
@@ -83,6 +84,7 @@ function TrackerHUD() {
   const shotRef = useRef(null)
   const phaseRef = useRef(null)
   const hostRef = useRef(null)
+  const [slowMo, setSlowMo] = useState(false)
 
   useEffect(() => {
     let raf = 0
@@ -124,9 +126,9 @@ function TrackerHUD() {
   }, [])
 
   return (
-    <div className="tracker" ref={hostRef} aria-hidden="true">
+    <div className="tracker" ref={hostRef}>
       {/* Follows the ball */}
-      <div className="tracker-reticle" ref={reticleRef}>
+      <div className="tracker-reticle" ref={reticleRef} aria-hidden="true">
         <span className="tracker-ring" />
         <span className="tracker-tick tracker-tick--n" />
         <span className="tracker-tick tracker-tick--s" />
@@ -147,6 +149,17 @@ function TrackerHUD() {
         <div className="tracker-panel-row tracker-panel-row--sub">
           <span>Shot <b ref={shotRef}>01</b></span>
           <span>HA · Court view</span>
+        </div>
+        <div className="tracker-panel-controls">
+          <button type="button" onClick={() => { trackerState.replay = true; audio.tick() }}>Replay point</button>
+          <button
+            type="button"
+            className={slowMo ? 'active' : ''}
+            aria-pressed={slowMo}
+            onClick={() => { trackerState.slowMo = !trackerState.slowMo; setSlowMo(trackerState.slowMo); audio.tick() }}
+          >
+            Slow-mo
+          </button>
         </div>
       </div>
     </div>
@@ -242,8 +255,8 @@ export default function Hero() {
         </motion.p>
 
         <motion.div className="hero-actions" variants={fadeUp} custom={1.3}>
-          <a href={hrefFor('journey')} className="btn btn--primary">Discover the journey</a>
-          <a href={hrefFor('contact', 'sponsorship')} className="btn btn--ghost">Partner with Hanif</a>
+          <Magnetic><a href={hrefFor('journey')} className="btn btn--primary">Discover the journey</a></Magnetic>
+          <Magnetic><a href={hrefFor('contact', 'sponsorship')} className="btn btn--ghost">Partner with Hanif</a></Magnetic>
         </motion.div>
 
         <motion.p className="hero-phrase" variants={fadeUp} custom={1.7}>

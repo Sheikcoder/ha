@@ -1,13 +1,24 @@
+import { useState, useCallback } from 'react'
 import PageHeader from '../components/PageHeader'
+import Lightbox from '../components/Lightbox'
 import { AnimatedSection, RevealText } from '../components/Reveal'
 import { GALLERY } from '../content/site'
 import HAMark from '../components/HAMark'
 import Tilt from '../components/Tilt'
 
-function PhotoTile({ photo, index }) {
+function PhotoTile({ photo, index, onOpen }) {
   const hasImage = Boolean(photo.src)
   return (
-    <Tilt as="figure" className={`photo-tile ${index === 0 ? 'photo-tile--wide' : ''} ${hasImage ? '' : 'photo-tile--empty'}`} max={6}>
+    <Tilt
+      as="figure"
+      className={`photo-tile ${index === 0 ? 'photo-tile--wide' : ''} ${hasImage ? '' : 'photo-tile--empty'}`}
+      max={6}
+      data-cursor={hasImage ? 'view' : undefined}
+      role={hasImage ? 'button' : undefined}
+      tabIndex={hasImage ? 0 : undefined}
+      onClick={hasImage ? onOpen : undefined}
+      onKeyDown={hasImage ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen() } } : undefined}
+    >
       {hasImage ? (
         <img src={photo.src} alt={photo.alt} loading="lazy" />
       ) : (
@@ -25,7 +36,7 @@ function PhotoTile({ photo, index }) {
 
 function VideoTile({ video }) {
   return (
-    <Tilt className="video-tile" max={6}>
+    <Tilt className="video-tile" max={6} data-cursor="play">
       {video.embed ? (
         <div className="video-embed">
           <iframe
@@ -52,6 +63,10 @@ function VideoTile({ video }) {
 }
 
 export default function Gallery() {
+  const withImages = GALLERY.photos.filter(p => p.src)
+  const [open, setOpen] = useState(null)
+  const close = useCallback(() => setOpen(null), [])
+
   return (
     <>
       <PageHeader page="gallery" label={GALLERY.label} heading={GALLERY.heading} intro={GALLERY.intro} />
@@ -71,12 +86,14 @@ export default function Gallery() {
           <div className="photo-grid">
             {GALLERY.photos.map((p, i) => (
               <RevealText key={i} delay={0.15 + i * 0.07}>
-                <PhotoTile photo={p} index={i} />
+                <PhotoTile photo={p} index={i} onOpen={() => setOpen(withImages.indexOf(p))} />
               </RevealText>
             ))}
           </div>
         </div>
       </AnimatedSection>
+
+      <Lightbox photos={withImages} index={open} onClose={close} onIndex={setOpen} />
 
       <AnimatedSection id="videos" className="section--dark">
         <div className="container">

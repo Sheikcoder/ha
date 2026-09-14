@@ -7,5 +7,8 @@ export const trackerState = {
   speed: 0,             // km/h (smoothed)
   shot: 0,
   phase: 'serve',       // 'serve' | 'rally' | 'point'
-  bounces: 0
+  bounces: 0,
+  // commands from the HUD → scene
+  replay: false,
+  slowMo: false
 }

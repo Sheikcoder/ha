@@ -5,6 +5,7 @@ import { BRAND, HOME, VALUES, JOURNEY } from '../content/site'
 import { hrefFor } from '../router'
 import HAMark from '../components/HAMark'
 import Tilt from '../components/Tilt'
+import PhotoBand from '../components/PhotoBand'
 
 const Logo3D = lazy(() => import('../components/Logo3D'))
 
@@ -27,6 +28,15 @@ export default function Home() {
           ))}
         </div>
       </div>
+
+      {/* ---- Hero photograph (auto burgundy duotone + parallax) ---- */}
+      <PhotoBand
+        src={HOME.heroPhoto.src}
+        alt={HOME.heroPhoto.alt}
+        position={HOME.heroPhoto.position}
+        kicker={HOME.heroPhoto.kicker}
+        lines={HOME.heroPhoto.lines}
+      />
 
       {/* ---- Introduction ---- */}
       <AnimatedSection id="intro" className="section--split">

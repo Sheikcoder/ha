@@ -35,6 +35,18 @@ export const VALUES = ['Professional', 'Respectful', 'Humble', 'Hard-working']
 
 export const HOME = {
   heroKicker: 'Junior Tennis Athlete',
+  heroPhoto: {
+    src: '/poster2.jpg',            // replace with a clean action photo (black / white / burgundy treatment is applied automatically)
+    alt: 'Hanif Abdullah on court',
+    position: '50% 20%',            // which part of the photo to keep in view
+    kicker: 'The moments that matter',
+    lines: [
+      'First day at a new academy.',
+      'Practising in the rain.',
+      'Respecting opponents.',
+      'Congratulating the winner after a defeat.'
+    ]
+  },
   intro: {
     label: 'Introduction',
     heading: 'A young player.\nA long road.\nA lot of heart.',

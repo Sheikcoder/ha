@@ -7,12 +7,14 @@ import { useEffect, useState, useCallback } from 'react'
    an element id on that page to scroll to.
    ------------------------------------------------------------ */
 
+import { smoothScroll } from './smoothScroll'
+
 const PAGES = ['home', 'about', 'journey', 'gallery', 'results', 'partners', 'contact']
 
 export function parseHash(hash = window.location.hash) {
   const clean = hash.replace(/^#\/?/, '')
   const [pageRaw = '', section = ''] = clean.split('/')
-  const page = PAGES.includes(pageRaw) ? pageRaw : 'home'
+  const page = PAGES.includes(pageRaw) ? pageRaw : (pageRaw ? 'notfound' : 'home')
   return { page, section }
 }
 
@@ -32,14 +34,14 @@ export function navigate(page, section) {
 
 export function scrollToSection(section) {
   if (!section) {
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    smoothScroll.to(0)
     return
   }
   const el = document.getElementById(section)
   if (el) {
     const offset = 90 // fixed nav height
     const top = el.getBoundingClientRect().top + window.scrollY - offset
-    window.scrollTo({ top, behavior: 'smooth' })
+    smoothScroll.to(top)
   }
 }
 
@@ -59,7 +61,7 @@ export function useRoute() {
       const t = setTimeout(() => scrollToSection(route.section), 120)
       return () => clearTimeout(t)
     }
-    window.scrollTo({ top: 0, behavior: 'auto' })
+    smoothScroll.reset(0)
   }, [route.page, route.section])
 
   const go = useCallback((page, section) => navigate(page, section), [])

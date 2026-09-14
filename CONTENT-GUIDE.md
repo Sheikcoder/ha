@@ -27,6 +27,13 @@ Sound is off until the visitor taps the speaker button (in the navigation, the m
 - Court effects (racket hit, bounce) and a soft stadium ambience are synthesised in the browser — no audio files needed.
 - Background music is also generated (a slow, calm theme) **unless** a file named `public/audio/theme.mp3` exists — drop a licensed track there and it plays instead, looped, at a gentle volume. Levels are in `src/audio.js` (`musicBus`, `sfx`, `ambienceBus`).
 
+## Interaction layer
+- Weighted smooth scrolling on desktop (`src/smoothScroll.js`, ease in `EASE`), companion cursor with VIEW / PLAY / DRAG labels (`Cursor.jsx`), magnetic buttons (`Magnetic.jsx`).
+- Journey page: on desktop the chapters travel horizontally while the section is pinned (GSAP ScrollTrigger, `JourneyTimeline.jsx`); phones get the vertical timeline.
+- Home "photo band": drop any action photo into `HOME.heroPhoto.src` — it is converted to the black/white/burgundy look automatically (`PhotoBand.jsx`).
+- Gallery photos open in a lightbox (arrow keys / Esc). The 3D HA mark on the home page can be dragged to rotate. The hero tracker panel has **Replay point** and **Slow-mo**.
+- SEO: `robots.txt`, `sitemap.xml`, `site.webmanifest`, Open Graph / Twitter tags and Person schema in `index.html` — update the `hanifabdullah.com` URLs to the real domain before launch.
+
 ## Performance notes
 - Every 3D scene pauses automatically when it is scrolled off screen or the tab is in the background.
 - The arena drops its pixel ratio if a device cannot hold 60 fps (`PerformanceMonitor` in `TennisScene.jsx`), and phones / low-core machines get lighter settings automatically (`src/perf.js`).

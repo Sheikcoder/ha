@@ -1,0 +1,16 @@
+{
+  "name": "Hanif Abdullah",
+  "short_name": "HA",
+  "description": "Hit with Heart. Ace Your Dreams.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8f6f6",
+  "theme_color": "#6e0f1f",
+  "icons": [
+    {
+      "src": "/ha-logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

@@ -62,8 +62,19 @@ export default function Footer() {
           </ul>
         </div>
 
-        <div className="footer-col">
-          <div className="footer-col-title">Follow</div>
+        <div className="footer-col footer-col--follow">
+          <div className="footer-col-title">Follow the journey</div>
+          <form
+            className="footer-subscribe"
+            onSubmit={(e) => {
+              e.preventDefault()
+              const email = new FormData(e.currentTarget).get('email')
+              window.location.href = `mailto:${BRAND.email}?subject=${encodeURIComponent('Follow the journey — updates')}&body=${encodeURIComponent(`Please add ${email} to Hanif's updates list.`)}`
+            }}
+          >
+            <input type="email" name="email" placeholder="Your email" required aria-label="Your email" />
+            <button type="submit" aria-label="Subscribe">→</button>
+          </form>
           <div className="footer-socials">
             {BRAND.socials.map(s => (
               <a key={s.label} href={s.href} aria-label={s.label} className="footer-social">

@@ -2,35 +2,16 @@ import PageHeader from '../components/PageHeader'
 import { AnimatedSection, RevealText } from '../components/Reveal'
 import { JOURNEY, BRAND } from '../content/site'
 import { hrefFor } from '../router'
-import Tilt from '../components/Tilt'
+import JourneyTimeline from '../components/JourneyTimeline'
 
 export default function Journey() {
   return (
     <>
       <PageHeader page="journey" label={JOURNEY.label} heading={JOURNEY.heading} intro={JOURNEY.intro} />
 
-      <AnimatedSection id="timeline" className="section--charcoal">
-        <div className="container container--narrow">
-          <ol className="timeline">
-            {JOURNEY.milestones.map((m, i) => (
-              <li key={m.id} id={m.id} className={`timeline-item timeline-item--${m.status}`}>
-                <RevealText delay={0.1 + i * 0.08}>
-                  <div className="timeline-marker" aria-hidden="true">
-                    <span />
-                  </div>
-                  <Tilt className="timeline-card" data-chapter={m.chapter} max={5}>
-                    <div className="timeline-chapter">Chapter {m.chapter}</div>
-                    <h3 className="timeline-title">{m.title}</h3>
-                    <div className="timeline-location">{m.location}</div>
-                    <p className="timeline-text">{m.text}</p>
-                    {m.status === 'next' && <span className="timeline-badge">Up next</span>}
-                  </Tilt>
-                </RevealText>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </AnimatedSection>
+      <section id="timeline" className="section section--charcoal section--timeline">
+        <JourneyTimeline milestones={JOURNEY.milestones} />
+      </section>
 
       <AnimatedSection className="section--closing section--closing-sm">
         <div className="container container--narrow center">

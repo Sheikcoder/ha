@@ -95,6 +95,7 @@ export default function LoadingScreen({ onComplete }) {
         <div className="loading-bar-container">
           <div className="loading-bar" style={{ width: `${Math.min(progress, 100)}%` }} />
         </div>
+        <div className="loading-count" aria-hidden="true">{String(Math.round(Math.min(progress, 100))).padStart(3, '0')}</div>
         <div className="loading-phrase">{BRAND.phrase}</div>
       </div>
     </div>

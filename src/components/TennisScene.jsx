@@ -5,7 +5,7 @@ import * as THREE from 'three'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 import TennisBall from './TennisBall'
 import HALogo3DMesh from './HALogoGeometry'
-import { COURT, createRally, stepRally, predictPath, speedKmh } from './rallyPhysics'
+import { COURT, createRally, stepRally, predictPath, speedKmh, serve } from './rallyPhysics'
 import { trackerState } from './trackerState'
 import { audio } from '../audio'
 import { lowPower, reducedMotion as prefersReducedMotion } from '../perf'
@@ -399,7 +399,14 @@ function Rally({ P }) {
   }
 
   useFrame((state, delta) => {
-    const dt = Math.min(delta, 0.05) * (reducedMotion ? 0.45 : TIME_SCALE)
+    if (trackerState.replay) {
+      trackerState.replay = false
+      history.current.length = 0
+      rally.resetTimer = 0
+      serve(rally, Math.random() < 0.5 ? 1 : -1)
+    }
+    const speedScale = trackerState.slowMo ? 0.28 : (reducedMotion ? 0.45 : TIME_SCALE)
+    const dt = Math.min(delta, 0.05) * speedScale
     stepRally(rally, dt)
 
     /* Consume physics events */
