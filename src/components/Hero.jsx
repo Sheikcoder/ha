@@ -1,10 +1,12 @@
-import { useRef, useEffect, Suspense, lazy } from 'react'
-import { motion } from 'framer-motion'
+import { useRef, useEffect, useState, Suspense, lazy } from 'react'
+import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
 import { BRAND, HOME } from '../content/site'
 import { hrefFor } from '../router'
 import { trackerState } from './trackerState'
 import HAMark from './HAMark'
 import { useTheme } from '../theme'
+import { useSound, audio } from '../audio'
+import { useVisibleFrameloop } from '../perf'
 
 const TennisScene = lazy(() => import('./TennisScene'))
 
@@ -20,16 +22,43 @@ const letter = {
 
 function AnimatedName({ text }) {
   const words = text.split(' ')
+  // After the letter intro, swap to two static word spans: far cheaper to
+  // paint, and the sheen then runs on 2 elements instead of 13.
+  const [settled, setSettled] = useState(false)
+  useEffect(() => {
+    const t = setTimeout(() => setSettled(true), 2400)
+    return () => clearTimeout(t)
+  }, [])
+
   return (
-    <motion.h1 className="hero-name" variants={letterParent} initial="hidden" animate="visible" aria-label={text}>
-      {words.map((word, wi) => (
-        <span className="word" key={wi} aria-hidden="true">
-          {word.split('').map((ch, ci) => (
-            <motion.span className="char" key={ci} variants={letter}>{ch}</motion.span>
+    <div className="hero-name-wrap">
+      {/* soft halo behind the name (static, never repaints) */}
+      <motion.span
+        className="hero-name hero-name-halo"
+        aria-hidden="true"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1.2, delay: 1.4 }}
+      >
+        {words.map((w, i) => <span className="word" key={i}>{w}</span>)}
+      </motion.span>
+
+      {settled ? (
+        <h1 className="hero-name hero-name--sheen" aria-label={text}>
+          {words.map((w, i) => <span className="word" key={i} style={{ '--i': i }}>{w}</span>)}
+        </h1>
+      ) : (
+        <motion.h1 className="hero-name" variants={letterParent} initial="hidden" animate="visible" aria-label={text}>
+          {words.map((word, wi) => (
+            <span className="word" key={wi} aria-hidden="true">
+              {word.split('').map((ch, ci) => (
+                <motion.span className="char" key={ci} variants={letter}>{ch}</motion.span>
+              ))}
+            </span>
           ))}
-        </span>
-      ))}
-    </motion.h1>
+        </motion.h1>
+      )}
+    </div>
   )
 }
 
@@ -128,24 +157,76 @@ function SceneFallback() {
   return <div className="hero-fallback" aria-hidden="true" />
 }
 
+/* ---- "Turn on sound" invitation shown until the visitor decides ---- */
+function SoundInvite() {
+  const { enabled } = useSound()
+  const [dismissed, setDismissed] = useState(false)
+  const [show, setShow] = useState(false)
+
+  useEffect(() => {
+    const t = setTimeout(() => setShow(true), 2600)
+    return () => clearTimeout(t)
+  }, [])
+
+  const visible = show && !enabled && !dismissed
+
+  return (
+    <AnimatePresence>
+      {visible && (
+        <motion.div
+          className="sound-invite"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 10 }}
+          transition={{ duration: 0.6 }}
+        >
+          <button type="button" className="sound-invite-btn" onClick={() => audio.setEnabled(true)}>
+            <span className="sound-bars" aria-hidden="true"><i /><i /><i /><i /></span>
+            Turn on sound — music &amp; court effects
+          </button>
+          <button type="button" className="sound-invite-close" onClick={() => setDismissed(true)} aria-label="Dismiss">×</button>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+}
+
 export default function Hero() {
   const { theme } = useTheme()
+  const canvasRef = useRef(null)
+  const frameloop = useVisibleFrameloop(canvasRef)
+  const { scrollY } = useScroll()
+  const contentY = useTransform(scrollY, [0, 700], [0, 180])
+  const contentOpacity = useTransform(scrollY, [0, 520], [1, 0])
+  const canvasScale = useTransform(scrollY, [0, 900], [1, 1.12])
+  const canvasY = useTransform(scrollY, [0, 900], [0, 120])
+
+  useEffect(() => {
+    // remembered preference: re-enable on the first interaction
+    if (audio.preferred && !audio.enabled) {
+      const once = () => { audio.setEnabled(true); window.removeEventListener('pointerdown', once); window.removeEventListener('keydown', once) }
+      window.addEventListener('pointerdown', once)
+      window.addEventListener('keydown', once)
+      return () => { window.removeEventListener('pointerdown', once); window.removeEventListener('keydown', once) }
+    }
+  }, [])
 
   return (
     <section className="hero" id="hero" aria-label="Hero">
-      <div className="hero-canvas">
+      <motion.div className="hero-canvas" style={{ scale: canvasScale, y: canvasY }} ref={canvasRef}>
         <Suspense fallback={<SceneFallback />}>
           {/* key remounts the scene so materials/lights rebuild for the new mode */}
-          <TennisScene key={theme} theme={theme} />
+          <TennisScene key={theme} theme={theme} frameloop={frameloop} />
         </Suspense>
-      </div>
+      </motion.div>
 
       <TrackerHUD />
 
       <div className="hero-overlay" />
       <div className="hero-grain" aria-hidden="true" />
+      <div className="hero-lines" aria-hidden="true"><span /><span /></div>
 
-      <motion.div className="hero-content" initial="hidden" animate="visible">
+      <motion.div className="hero-content" initial="hidden" animate="visible" style={{ y: contentY, opacity: contentOpacity }}>
         <motion.div variants={fadeUp} custom={0.3}>
           <HAMark className="hero-logo" />
         </motion.div>
@@ -169,6 +250,8 @@ export default function Hero() {
           {BRAND.phrase}
         </motion.p>
       </motion.div>
+
+      <SoundInvite />
 
       <div className="scroll-indicator" aria-hidden="true">
         <div className="scroll-indicator-line" />

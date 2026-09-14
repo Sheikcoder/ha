@@ -1,4 +1,5 @@
 import { useTheme } from '../theme'
+import { audio } from '../audio'
 
 /* ---- Wine / Dark display switch ---- */
 export default function ThemeSwitch({ className = '' }) {
@@ -9,7 +10,7 @@ export default function ThemeSwitch({ className = '' }) {
       <button
         type="button"
         className={theme === 'wine' ? 'active' : ''}
-        onClick={() => setTheme('wine')}
+        onClick={() => { setTheme('wine'); audio.tick() }}
         aria-pressed={theme === 'wine'}
         title="Wine mode — white & burgundy"
       >
@@ -19,7 +20,7 @@ export default function ThemeSwitch({ className = '' }) {
       <button
         type="button"
         className={theme === 'dark' ? 'active' : ''}
-        onClick={() => setTheme('dark')}
+        onClick={() => { setTheme('dark'); audio.tick() }}
         aria-pressed={theme === 'dark'}
         title="Dark mode — charcoal & burgundy"
       >

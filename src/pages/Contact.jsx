@@ -2,6 +2,7 @@ import { useState } from 'react'
 import PageHeader from '../components/PageHeader'
 import { AnimatedSection, RevealText } from '../components/Reveal'
 import { CONTACT, BRAND } from '../content/site'
+import Tilt from '../components/Tilt'
 
 export default function Contact() {
   const [topic, setTopic] = useState(CONTACT.channels[0].id)
@@ -22,7 +23,7 @@ export default function Contact() {
 
   return (
     <>
-      <PageHeader label={CONTACT.label} heading={CONTACT.heading} intro={CONTACT.intro} />
+      <PageHeader page="contact" label={CONTACT.label} heading={CONTACT.heading} intro={CONTACT.intro} />
 
       {/* ---- Channels ---- */}
       <AnimatedSection id="channels" className="section--charcoal section--tight">
@@ -30,7 +31,7 @@ export default function Contact() {
           <div className="contact-grid">
             {CONTACT.channels.map((c, i) => (
               <RevealText key={c.id} delay={0.1 + i * 0.1}>
-                <div className="card contact-card" id={c.id}>
+                <Tilt className="card contact-card" id={c.id}>
                   <div className="contact-card-index">{String(i + 1).padStart(2, '0')}</div>
                   <h3 className="contact-card-title">{c.title}</h3>
                   <p className="contact-card-text">{c.text}</p>
@@ -38,7 +39,7 @@ export default function Contact() {
                   <button type="button" className="text-link" onClick={() => { setTopic(c.id); document.getElementById('form')?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }}>
                     Write to us
                   </button>
-                </div>
+                </Tilt>
               </RevealText>
             ))}
           </div>

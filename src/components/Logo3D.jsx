@@ -4,6 +4,7 @@ import * as THREE from 'three'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 import HALogo3DMesh from './HALogoGeometry'
 import { useTheme } from '../theme'
+import { useVisibleFrameloop, lowPower } from '../perf'
 
 /* ---- Environment map without any network requests ---- */
 function LogoEnvironment() {
@@ -27,7 +28,8 @@ function InteractiveLogo({ dark }) {
 
   useFrame((state) => {
     if (containerRef.current) {
-      const mouseX = state.pointer.x * 0.45
+      const scrollTurn = (window.scrollY || 0) * 0.0012
+      const mouseX = state.pointer.x * 0.45 + scrollTurn
       const mouseY = state.pointer.y * 0.3
       containerRef.current.rotation.y = THREE.MathUtils.lerp(containerRef.current.rotation.y, mouseX, 0.05)
       containerRef.current.rotation.x = THREE.MathUtils.lerp(containerRef.current.rotation.x, -mouseY, 0.05)
@@ -59,11 +61,14 @@ function InteractiveLogo({ dark }) {
 export default function Logo3D({ height = '420px', transparent = true }) {
   const { theme } = useTheme()
   const dark = theme === 'dark'
+  const hostRef = useRef(null)
+  const frameloop = useVisibleFrameloop(hostRef)
   return (
-    <div className="logo3d" style={{ width: '100%', height, position: 'relative' }}>
+    <div className="logo3d" style={{ width: '100%', height, position: 'relative' }} ref={hostRef}>
       <Canvas
         key={theme}
-        dpr={[1, 1.75]}
+        dpr={lowPower ? 1 : [1, 1.5]}
+        frameloop={frameloop}
         camera={{ position: [0, 0, 5], fov: 42 }}
         gl={{ antialias: true, alpha: transparent, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.15 }}
         style={{ background: 'transparent' }}

@@ -50,3 +50,34 @@ export function Lines({ text }) {
     </span>
   ))
 }
+
+/* ---- Heading that reveals word by word (clip + rise) ---- */
+export function RevealHeading({ text, as = 'h2', className = '', delay = 0 }) {
+  const ref = useRef(null)
+  const isInView = useInView(ref, { once: true, margin: '-60px' })
+  const Tag = motion[as] || motion.h2
+  const lines = String(text).split('\n')
+  let index = 0
+  return (
+    <Tag ref={ref} className={`reveal-heading ${className}`} aria-label={text}>
+      {lines.map((line, li) => (
+        <span className="reveal-line" key={li} aria-hidden="true">
+          {line.split(' ').map((word, wi) => {
+            const d = delay + index++ * 0.07
+            return (
+              <span className="reveal-word" key={wi}>
+                <motion.span
+                  initial={{ y: '110%', opacity: 0 }}
+                  animate={isInView ? { y: '0%', opacity: 1 } : { y: '110%', opacity: 0 }}
+                  transition={{ duration: 0.8, delay: d, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  {word}
+                </motion.span>
+              </span>
+            )
+          })}
+        </span>
+      ))}
+    </Tag>
+  )
+}

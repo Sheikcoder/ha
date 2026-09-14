@@ -1,9 +1,10 @@
 import { Suspense, lazy } from 'react'
 import Hero from '../components/Hero'
-import { AnimatedSection, RevealText, Lines } from '../components/Reveal'
+import { AnimatedSection, RevealText, RevealHeading } from '../components/Reveal'
 import { BRAND, HOME, VALUES, JOURNEY } from '../content/site'
 import { hrefFor } from '../router'
 import HAMark from '../components/HAMark'
+import Tilt from '../components/Tilt'
 
 const Logo3D = lazy(() => import('../components/Logo3D'))
 
@@ -37,9 +38,7 @@ export default function Home() {
           </div>
           <div className="split-text">
             <RevealText><div className="section-label">{HOME.intro.label}</div></RevealText>
-            <RevealText delay={0.15}>
-              <h2 className="section-heading"><Lines text={HOME.intro.heading} /></h2>
-            </RevealText>
+            <RevealHeading className="section-heading" text={HOME.intro.heading} delay={0.1} />
             <RevealText delay={0.3}><div className="section-divider section-divider--left" /></RevealText>
             {HOME.intro.body.map((p, i) => (
               <RevealText key={i} delay={0.4 + i * 0.1}>
@@ -59,7 +58,7 @@ export default function Home() {
           <div className="section-head">
             <div>
               <RevealText><div className="section-label">Latest news</div></RevealText>
-              <RevealText delay={0.15}><h2 className="section-heading section-heading--md">From the court</h2></RevealText>
+              <RevealHeading className="section-heading section-heading--md" text="From the court" delay={0.1} />
             </div>
             <RevealText delay={0.3}>
               <a href={hrefFor('gallery')} className="text-link">View the gallery</a>
@@ -69,14 +68,14 @@ export default function Home() {
           <div className="news-grid">
             {HOME.news.map((item, i) => (
               <RevealText key={i} delay={0.2 + i * 0.12}>
-                <article className="card news-card">
+                <Tilt as="article" className="card news-card">
                   <div className="news-card-meta">
                     <span className="news-card-tag">{item.tag}</span>
                     <span className="news-card-date">{item.date}</span>
                   </div>
                   <h3 className="news-card-title">{item.title}</h3>
                   <p className="news-card-excerpt">{item.excerpt}</p>
-                </article>
+                </Tilt>
               </RevealText>
             ))}
           </div>

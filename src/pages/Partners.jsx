@@ -2,11 +2,12 @@ import PageHeader from '../components/PageHeader'
 import { AnimatedSection, RevealText } from '../components/Reveal'
 import { PARTNERS, VALUES } from '../content/site'
 import { hrefFor } from '../router'
+import Tilt from '../components/Tilt'
 
 export default function Partners() {
   return (
     <>
-      <PageHeader label={PARTNERS.label} heading={PARTNERS.heading} intro={PARTNERS.intro} />
+      <PageHeader page="partners" label={PARTNERS.label} heading={PARTNERS.heading} intro={PARTNERS.intro} />
 
       {/* ---- Future sponsors ---- */}
       <AnimatedSection id="sponsors" className="section--split section--charcoal">
@@ -24,11 +25,11 @@ export default function Partners() {
             <RevealText delay={0.2}>
               <div className="partner-slots" aria-label="Sponsor placements">
                 {['Title partner', 'Equipment partner', 'Travel partner', 'Academy partner'].map(slot => (
-                  <div key={slot} className="partner-slot">
+                  <Tilt key={slot} className="partner-slot" max={10}>
                     <span className="partner-slot-mark" aria-hidden="true" />
                     <span>{slot}</span>
                     <em>Your brand here</em>
-                  </div>
+                  </Tilt>
                 ))}
               </div>
             </RevealText>
@@ -48,11 +49,11 @@ export default function Partners() {
           <div className="goal-grid goal-grid--three">
             {PARTNERS.equipment.items.map((item, i) => (
               <RevealText key={i} delay={0.2 + i * 0.1}>
-                <div className="card goal-card">
+                <Tilt className="card goal-card">
                   <div className="goal-index">{String(i + 1).padStart(2, '0')}</div>
                   <h3 className="goal-title">{item.name}</h3>
                   <p className="goal-text">{item.text}</p>
-                </div>
+                </Tilt>
               </RevealText>
             ))}
           </div>

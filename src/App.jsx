@@ -1,10 +1,11 @@
-import { useState, useEffect, lazy, Suspense } from 'react'
+import { useState, useEffect, useRef, lazy, Suspense } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import LoadingScreen from './components/LoadingScreen'
 import Navigation from './components/Navigation'
 import Footer from './components/Footer'
 import { useRoute } from './router'
 import { ThemeProvider } from './theme'
+import { audio } from './audio'
 import Home from './pages/Home'
 
 // Inner pages are code-split so the home page loads as fast as possible
@@ -48,6 +49,13 @@ function AppShell() {
 
   const Page = PAGES[page] || Home
 
+  // transition sound when moving between pages
+  const firstRoute = useRef(true)
+  useEffect(() => {
+    if (firstRoute.current) { firstRoute.current = false; return }
+    audio.whoosh()
+  }, [page])
+
   return (
     <>
       {!loaded && <LoadingScreen onComplete={() => setLoaded(true)} />}
@@ -65,11 +73,20 @@ function AppShell() {
             <motion.main
               key={page}
               className={`page page--${page}`}
-              initial={{ opacity: 0, y: 12 }}
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.45, ease: 'easeOut' }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.5, ease: 'easeOut' }}
             >
+              {/* burgundy wipe that reveals the new page */}
+              <motion.div
+                className="page-wipe"
+                initial={{ scaleY: 1 }}
+                animate={{ scaleY: 0 }}
+                exit={{ scaleY: 1 }}
+                transition={{ duration: 0.7, ease: [0.76, 0, 0.24, 1] }}
+                aria-hidden="true"
+              />
               <Suspense fallback={<PageFallback />}>
                 <Page />
               </Suspense>

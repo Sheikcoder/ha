@@ -1,5 +1,6 @@
 import PageHeader from '../components/PageHeader'
-import { AnimatedSection, RevealText, Lines } from '../components/Reveal'
+import { AnimatedSection, RevealText, RevealHeading } from '../components/Reveal'
+import Tilt from '../components/Tilt'
 import { ABOUT, BRAND, VALUES } from '../content/site'
 import { hrefFor } from '../router'
 
@@ -7,6 +8,7 @@ export default function About() {
   return (
     <>
       <PageHeader
+        page="about"
         label="About"
         heading={'Every champion\nbegins as a learner.'}
         intro="Who Hanif is, what he is working towards, and the kind of person we hope this journey helps him become."
@@ -17,17 +19,15 @@ export default function About() {
         <div className="split">
           <div className="split-media">
             <RevealText>
-              <figure className="photo-frame">
+              <Tilt as="figure" className="photo-frame" max={6}>
                 <img src="/poster2.jpg" alt="Hanif Abdullah on court" />
                 <figcaption>{BRAND.hashtag}</figcaption>
-              </figure>
+              </Tilt>
             </RevealText>
           </div>
           <div className="split-text">
             <RevealText><div className="section-label">{ABOUT.story.label}</div></RevealText>
-            <RevealText delay={0.15}>
-              <h2 className="section-heading"><Lines text={ABOUT.story.heading} /></h2>
-            </RevealText>
+            <RevealHeading className="section-heading" text={ABOUT.story.heading} delay={0.1} />
             <RevealText delay={0.3}><div className="section-divider section-divider--left" /></RevealText>
             {ABOUT.story.paragraphs.map((p, i) => (
               <RevealText key={i} delay={0.4 + i * 0.1}>
@@ -50,11 +50,11 @@ export default function About() {
           <div className="goal-grid">
             {ABOUT.goals.items.map((g, i) => (
               <RevealText key={i} delay={0.2 + i * 0.1}>
-                <div className="card goal-card">
+                <Tilt className="card goal-card">
                   <div className="goal-index">{String(i + 1).padStart(2, '0')}</div>
                   <h3 className="goal-title">{g.title}</h3>
                   <p className="goal-text">{g.text}</p>
-                </div>
+                </Tilt>
               </RevealText>
             ))}
           </div>

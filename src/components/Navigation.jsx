@@ -3,10 +3,14 @@ import { NAV, BRAND } from '../content/site'
 import { hrefFor } from '../router'
 import HAMark from './HAMark'
 import ThemeSwitch from './ThemeSwitch'
+import SoundToggle from './SoundToggle'
+import { motion, useScroll, useSpring } from 'framer-motion'
 
 export default function Navigation({ page }) {
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const { scrollYProgress } = useScroll()
+  const progress = useSpring(scrollYProgress, { stiffness: 120, damping: 24, mass: 0.3 })
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 40)
@@ -49,6 +53,7 @@ export default function Navigation({ page }) {
         </ul>
 
         <div className="nav-right">
+          <SoundToggle label={false} />
           <ThemeSwitch />
           <a href={hrefFor('contact', 'sponsorship')} className="nav-cta">Partner with Hanif</a>
         </div>
@@ -63,6 +68,7 @@ export default function Navigation({ page }) {
           <span></span>
           <span></span>
         </button>
+        <motion.span className="nav-progress" style={{ scaleX: progress }} aria-hidden="true" />
       </nav>
 
       <div className={`mobile-menu ${menuOpen ? 'open' : ''}`} role="dialog" aria-label="Mobile menu">
@@ -78,7 +84,10 @@ export default function Navigation({ page }) {
           </a>
         ))}
         <div className="mobile-menu-footer">
-          <ThemeSwitch />
+          <div className="mobile-menu-controls">
+            <SoundToggle />
+            <ThemeSwitch />
+          </div>
           <span>{BRAND.tagline}</span>
         </div>
       </div>

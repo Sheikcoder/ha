@@ -22,6 +22,16 @@ The site ships with two looks, switchable from the toggle in the navigation (and
 
 The visitor's choice is remembered in the browser. To change the default, edit the fallback `'wine'` in `src/theme.jsx` and in the small inline script in `index.html`. All colours for both modes are defined once at the top of `src/styles.css`; the arena palettes live in `PALETTES` in `src/components/TennisScene.jsx`.
 
+## Sound
+Sound is off until the visitor taps the speaker button (in the navigation, the mobile menu, or the "Turn on sound" pill on the home page). The choice is remembered.
+- Court effects (racket hit, bounce) and a soft stadium ambience are synthesised in the browser — no audio files needed.
+- Background music is also generated (a slow, calm theme) **unless** a file named `public/audio/theme.mp3` exists — drop a licensed track there and it plays instead, looped, at a gentle volume. Levels are in `src/audio.js` (`musicBus`, `sfx`, `ambienceBus`).
+
+## Performance notes
+- Every 3D scene pauses automatically when it is scrolled off screen or the tab is in the background.
+- The arena drops its pixel ratio if a device cannot hold 60 fps (`PerformanceMonitor` in `TennisScene.jsx`), and phones / low-core machines get lighter settings automatically (`src/perf.js`).
+- Visitors with "reduce motion" enabled get slower ball play and no tilt/sheen effects.
+
 ## Brand rules baked into the design
 - Colours: Deep Burgundy `#6E0F1F` + White (primary); Charcoal `#1B1B1E` + Silver `#C9CBD1` (secondary). Tokens are at the top of `src/styles.css`.
 - Photography: black / white / burgundy, minimal editing, clean backgrounds. Photos in the gallery get a light grayscale/contrast treatment automatically so they feel consistent.

@@ -2,11 +2,12 @@ import PageHeader from '../components/PageHeader'
 import { AnimatedSection, RevealText } from '../components/Reveal'
 import { GALLERY } from '../content/site'
 import HAMark from '../components/HAMark'
+import Tilt from '../components/Tilt'
 
 function PhotoTile({ photo, index }) {
   const hasImage = Boolean(photo.src)
   return (
-    <figure className={`photo-tile ${index === 0 ? 'photo-tile--wide' : ''} ${hasImage ? '' : 'photo-tile--empty'}`}>
+    <Tilt as="figure" className={`photo-tile ${index === 0 ? 'photo-tile--wide' : ''} ${hasImage ? '' : 'photo-tile--empty'}`} max={6}>
       {hasImage ? (
         <img src={photo.src} alt={photo.alt} loading="lazy" />
       ) : (
@@ -18,13 +19,13 @@ function PhotoTile({ photo, index }) {
         <span>{photo.caption}</span>
         {!hasImage && <em>Photo coming soon</em>}
       </figcaption>
-    </figure>
+    </Tilt>
   )
 }
 
 function VideoTile({ video }) {
   return (
-    <div className="video-tile">
+    <Tilt className="video-tile" max={6}>
       {video.embed ? (
         <div className="video-embed">
           <iframe
@@ -46,14 +47,14 @@ function VideoTile({ video }) {
         <span className="video-title">{video.title}</span>
         <span className="video-duration">{video.duration}</span>
       </div>
-    </div>
+    </Tilt>
   )
 }
 
 export default function Gallery() {
   return (
     <>
-      <PageHeader label={GALLERY.label} heading={GALLERY.heading} intro={GALLERY.intro} />
+      <PageHeader page="gallery" label={GALLERY.label} heading={GALLERY.heading} intro={GALLERY.intro} />
 
       <AnimatedSection id="photos" className="section--charcoal">
         <div className="container">

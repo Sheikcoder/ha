@@ -2,11 +2,12 @@ import PageHeader from '../components/PageHeader'
 import { AnimatedSection, RevealText } from '../components/Reveal'
 import { JOURNEY, BRAND } from '../content/site'
 import { hrefFor } from '../router'
+import Tilt from '../components/Tilt'
 
 export default function Journey() {
   return (
     <>
-      <PageHeader label={JOURNEY.label} heading={JOURNEY.heading} intro={JOURNEY.intro} />
+      <PageHeader page="journey" label={JOURNEY.label} heading={JOURNEY.heading} intro={JOURNEY.intro} />
 
       <AnimatedSection id="timeline" className="section--charcoal">
         <div className="container container--narrow">
@@ -17,13 +18,13 @@ export default function Journey() {
                   <div className="timeline-marker" aria-hidden="true">
                     <span />
                   </div>
-                  <div className="timeline-card" data-chapter={m.chapter}>
+                  <Tilt className="timeline-card" data-chapter={m.chapter} max={5}>
                     <div className="timeline-chapter">Chapter {m.chapter}</div>
                     <h3 className="timeline-title">{m.title}</h3>
                     <div className="timeline-location">{m.location}</div>
                     <p className="timeline-text">{m.text}</p>
                     {m.status === 'next' && <span className="timeline-badge">Up next</span>}
-                  </div>
+                  </Tilt>
                 </RevealText>
               </li>
             ))}

@@ -1,11 +1,12 @@
 import PageHeader from '../components/PageHeader'
 import { AnimatedSection, RevealText } from '../components/Reveal'
 import { RESULTS } from '../content/site'
+import Tilt from '../components/Tilt'
 
 export default function Results() {
   return (
     <>
-      <PageHeader label={RESULTS.label} heading={RESULTS.heading} intro={RESULTS.intro} />
+      <PageHeader page="results" label={RESULTS.label} heading={RESULTS.heading} intro={RESULTS.intro} />
 
       {/* ---- Titles / summary ---- */}
       <AnimatedSection id="titles" className="section--charcoal section--tight">
@@ -13,11 +14,11 @@ export default function Results() {
           <div className="stats-row stats-row--cards">
             {RESULTS.titles.map((t, i) => (
               <RevealText key={i} delay={0.1 + i * 0.1}>
-                <div className="stat stat--card">
+                <Tilt className="stat stat--card">
                   <div className="stat-number">{t.value}</div>
                   <div className="stat-label">{t.title}</div>
                   <div className="stat-note">{t.note}</div>
-                </div>
+                </Tilt>
               </RevealText>
             ))}
           </div>

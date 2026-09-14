@@ -1,12 +1,14 @@
-import { useRef, useMemo, useEffect } from 'react'
+import { useRef, useMemo, useEffect, useState } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { Sparkles } from '@react-three/drei'
+import { Sparkles, PerformanceMonitor } from '@react-three/drei'
 import * as THREE from 'three'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 import TennisBall from './TennisBall'
 import HALogo3DMesh from './HALogoGeometry'
 import { COURT, createRally, stepRally, predictPath, speedKmh } from './rallyPhysics'
 import { trackerState } from './trackerState'
+import { audio } from '../audio'
+import { lowPower, reducedMotion as prefersReducedMotion } from '../perf'
 
 /* ============================================================
    HERO — 3D BALL TRACKER
@@ -198,27 +200,13 @@ function Court({ P }) {
       {/* Playing surface — deep burgundy, lightly glossy so the trail reflects */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
         <planeGeometry args={[D * 2 + 2.4, L * 2 + 4.0]} />
-        <meshPhysicalMaterial
-          color={P.burgundyDeep}
-          roughness={0.42}
-          metalness={0.15}
-          clearcoat={0.6}
-          clearcoatRoughness={0.35}
-          envMapIntensity={0.6}
-        />
+        <meshStandardMaterial color={P.burgundyDeep} roughness={0.38} metalness={0.2} envMapIntensity={0.7} />
       </mesh>
 
       {/* Inner court — slightly lighter burgundy to lift the lines */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.003, 0]} receiveShadow>
         <planeGeometry args={[D * 2, L * 2]} />
-        <meshPhysicalMaterial
-          color={P.court}
-          roughness={0.45}
-          metalness={0.12}
-          clearcoat={0.5}
-          clearcoatRoughness={0.4}
-          envMapIntensity={0.6}
-        />
+        <meshStandardMaterial color={P.court} roughness={0.4} metalness={0.18} envMapIntensity={0.7} />
       </mesh>
 
       <CourtLines color={P.lines} />
@@ -230,6 +218,10 @@ function Court({ P }) {
 /* ------------------------------------------------------------ Stadium */
 
 function Stadium({ P }) {
+  const standMaterials = useMemo(
+    () => Array.from({ length: 9 }, (_, i) => new THREE.MeshStandardMaterial({ color: P.stand(i), roughness: 0.95 })),
+    [P]
+  )
   const tiers = useMemo(() => {
     const result = []
     const rows = 9
@@ -249,9 +241,8 @@ function Stadium({ P }) {
   return (
     <group>
       {tiers.map((t, i) => (
-        <mesh key={i} position={t.pos}>
+        <mesh key={i} position={t.pos} material={standMaterials[i % 9]}>
           <boxGeometry args={t.size} />
-          <meshStandardMaterial color={P.stand(i)} roughness={0.95} />
         </mesh>
       ))}
 
@@ -291,7 +282,9 @@ function Rally({ P }) {
   const glowTexture = useMemo(() => makeGlowTexture(), [])
 
   /* --- Trail ribbons (inner bright core + outer soft glow) --- */
-  const history = useRef([])   // array of THREE.Vector3
+  const history = useRef([])   // ring of pooled THREE.Vector3
+  const vectorPool = useMemo(() => Array.from({ length: TRAIL_LENGTH + 2 }, () => new THREE.Vector3()), [])
+  const poolIndex = useRef(0)
   const makeRibbon = () => {
     const geometry = new THREE.BufferGeometry()
     const positions = new Float32Array(TRAIL_LENGTH * 2 * 3)
@@ -368,10 +361,7 @@ function Rally({ P }) {
   const projected = useMemo(() => new THREE.Vector3(), [])
   const smoothedSpeed = useRef(0)
 
-  const reducedMotion = useMemo(
-    () => typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches,
-    []
-  )
+  const reducedMotion = prefersReducedMotion
 
   const updateRibbon = (geometry, width, power) => {
     const pts = history.current
@@ -406,7 +396,6 @@ function Rally({ P }) {
     geometry.attributes.position.needsUpdate = true
     geometry.attributes.aAlpha.needsUpdate = true
     geometry.setDrawRange(0, (n - 1) * 6)
-    geometry.computeBoundingSphere()
   }
 
   useFrame((state, delta) => {
@@ -438,13 +427,16 @@ function Rally({ P }) {
         }
         dustGeometry.attributes.position.needsUpdate = true
         trackerState.phase = 'rally'
+        audio.bounce(ev.pos.x / 6, 0.7 + Math.min(0.3, Math.abs(rally.vel.z) / 60))
       } else if (ev.type === 'hit') {
         flash.current.active = true
         flash.current.t = 0
         if (flashRef.current) flashRef.current.position.set(ev.pos.x, ev.pos.y, ev.pos.z)
+        audio.hit(ev.pos.x / 6, 0.85)
       } else if (ev.type === 'serve') {
         history.current.length = 0
         trackerState.phase = 'serve'
+        audio.hit(ev.pos.x / 6, 1)
       } else if (ev.type === 'point') {
         trackerState.phase = 'point'
       }
@@ -479,7 +471,10 @@ function Rally({ P }) {
     /* Trail history */
     if (rally.airborne) {
       const h = history.current
-      h.push(new THREE.Vector3(p.x, p.y, p.z))
+      const v = vectorPool[poolIndex.current]
+      poolIndex.current = (poolIndex.current + 1) % vectorPool.length
+      v.set(p.x, p.y, p.z)
+      h.push(v)
       if (h.length > TRAIL_LENGTH) h.shift()
     } else if (history.current.length) {
       history.current.shift()
@@ -495,7 +490,6 @@ function Rally({ P }) {
     for (let i = 0; i < pred.length; i++) parr[i] = pred[i]
     predictGeometry.attributes.position.needsUpdate = true
     predictGeometry.setDrawRange(0, count)
-    predictGeometry.computeBoundingSphere()
 
     /* Impact marks */
     marks.current.forEach((m, i) => {
@@ -667,50 +661,58 @@ function CameraRig() {
 
 /* ------------------------------------------------------------ Scene */
 
-export default function TennisScene({ theme = 'wine' }) {
+export default function TennisScene({ theme = 'wine', frameloop = 'always' }) {
   const P = PALETTES[theme] || PALETTES.wine
+  // adaptive pixel ratio: starts sharp, steps down if the GPU can't keep 60fps
+  const [dpr, setDpr] = useState(lowPower ? 1 : 1.5)
 
   return (
     <Canvas
-      shadows
-      dpr={[1, 1.75]}
+      shadows={lowPower ? false : 'percentage'}
+      dpr={dpr}
+      frameloop={frameloop}
       camera={{ position: [3, 18, 36], fov: 40, near: 0.1, far: 160 }}
       style={{ background: P.bg }}
       gl={{
-        antialias: true,
+        antialias: !lowPower,
         toneMapping: THREE.ACESFilmicToneMapping,
         toneMappingExposure: P.exposure,
-        powerPreference: 'high-performance'
+        powerPreference: 'high-performance',
+        stencil: false
       }}
     >
+      <PerformanceMonitor
+        onDecline={() => setDpr(1)}
+        onIncline={() => setDpr(lowPower ? 1 : 1.5)}
+        flipflops={3}
+        onFallback={() => setDpr(1)}
+      />
       <color attach="background" args={[P.bg]} />
       <fog attach="fog" args={[P.bg, P.fog[0], P.fog[1]]} />
 
       <SceneEnvironment intensity={P.envIntensity} />
       <CameraRig />
 
-      {/* Lighting — stadium white with a burgundy lift */}
+      {/* Lighting — kept lean: one shadow-casting key, one fill, sky light, one stadium spot */}
       <hemisphereLight args={P.hemi} />
       <ambientLight intensity={P.ambient} color="#ffffff" />
       <directionalLight
         position={[9, 16, 7]}
         intensity={P.key}
         color="#fff6ea"
-        castShadow
-        shadow-mapSize-width={2048}
-        shadow-mapSize-height={2048}
-        shadow-camera-left={-16}
-        shadow-camera-right={16}
-        shadow-camera-top={18}
-        shadow-camera-bottom={-18}
+        castShadow={!lowPower}
+        shadow-mapSize-width={1024}
+        shadow-mapSize-height={1024}
+        shadow-camera-left={-14}
+        shadow-camera-right={14}
+        shadow-camera-top={16}
+        shadow-camera-bottom={-16}
         shadow-camera-near={1}
         shadow-camera-far={60}
-        shadow-bias={-0.0004}
+        shadow-bias={-0.0006}
       />
       <directionalLight position={[-10, 12, -8]} intensity={0.8} color="#dfe3ff" />
-      <spotLight position={[-19, 16, 26]} angle={0.55} penumbra={0.9} intensity={220} distance={60} decay={1.6} color="#fff3e0" />
-      <spotLight position={[19, 16, -26]} angle={0.55} penumbra={0.9} intensity={180} distance={60} decay={1.6} color="#fff3e0" />
-      <pointLight position={[0, 6, -20]} intensity={40} distance={30} decay={1.8} color={P.burgundyLight} />
+      <spotLight position={[-19, 16, 26]} angle={0.6} penumbra={0.9} intensity={240} distance={70} decay={1.6} color="#fff3e0" />
 
       <Court P={P} />
       <Stadium P={P} />
@@ -732,7 +734,7 @@ export default function TennisScene({ theme = 'wine' }) {
       <Rally P={P} />
 
       {/* Dust in the floodlights */}
-      <Sparkles count={140} scale={[26, 9, 34]} position={[0, 4, 0]} size={1.6} speed={0.25} opacity={theme === 'dark' ? 0.35 : 0.2} color={theme === 'dark' ? '#c9cbd1' : '#8e1b31'} />
+      <Sparkles count={lowPower ? 40 : 90} scale={[26, 9, 34]} position={[0, 4, 0]} size={1.6} speed={0.25} opacity={theme === 'dark' ? 0.35 : 0.2} color={theme === 'dark' ? '#c9cbd1' : '#8e1b31'} />
     </Canvas>
   )
 }
